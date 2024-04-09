@@ -3,6 +3,6 @@
 class IFunc
 {
 public:
-    virtual double getValue(double x) { return 0.0; };
+    virtual double getValue(double x) = 0;
 };
 
