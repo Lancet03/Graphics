@@ -11,7 +11,7 @@
 #include "LinearFunc.h"
 #include "SquareFunc.h"
 
-IFunc* functionToDraw = new SquareFunc(1, 1, 1);
+IFunc* functionToDraw = new LinearFunc(1, 1);
 
 const wchar_t CLASS_NAME[] = L"Graphics";
 
@@ -43,9 +43,9 @@ HWND CreateMainWindow(HINSTANCE hInstance);
 WPARAM StartMessageLoop();
 void Render(HDC hdc);
 void DrawGrid(HDC hdc, int width, int height);
-void DrawNumbers(HDC hdc, int width, int height, double maxY);
+void DrawNumbers(HDC hdc, int width, int height, double sizeCoeff);
 void DrawXYAxis(HDC hdc, int width, int height);
-YSizes DrawGraph(HDC hdc, IFunc* func, int userSpaceWidth, int userSpaceHeight);
+double DrawGraph(HDC hdc, IFunc* func, int userSpaceWidth, int userSpaceHeight);
 CalcedDotsAndSizes CalcDots(IFunc* func, int minX, int maxX);
 void SelectPen(HDC hdc, PenParams penParams);
 
@@ -154,12 +154,9 @@ void Render(HDC hdc)
     int width = rect.right - rect.left;
     int height = rect.bottom - rect.top;
 
-    YSizes ySizes = DrawGraph(hdc, functionToDraw, width, height);
+    double sizeCoeff = DrawGraph(hdc, functionToDraw, width, height);
 
-    double maxY = ySizes.maxY;
 
-    if (maxY < ySizes.minY) maxY = ySizes.minY;
-    if (maxY < -ySizes.minY) maxY = -ySizes.minY;
     // Рисуем оси координат
     DrawXYAxis(hdc, width, height);
     
@@ -167,7 +164,7 @@ void Render(HDC hdc)
     DrawGrid(hdc, width, height);
 
     // Рисуем числа на пересечениях сетки
-    DrawNumbers(hdc, width, height, maxY);
+    DrawNumbers(hdc, width, height, sizeCoeff);
 }
 
 void DrawXYAxis(HDC hdc, int width, int height) 
@@ -219,7 +216,7 @@ void DrawGrid(HDC hdc, int width, int height) {
 }
 
 // Функция для рисования чисел на пересечениях сетки
-void DrawNumbers(HDC hdc, int width, int height, double maxY) {
+void DrawNumbers(HDC hdc, int width, int height, double sizeCoeff) {
     int fontHeight = 20;
     
     // Шрифт для чисел
@@ -244,13 +241,13 @@ void DrawNumbers(HDC hdc, int width, int height, double maxY) {
     // Рисуем числа на оси Y
     for (int y = height / 2 + STEP; y < height; y += STEP) {
         std::wstringstream ss;
-        ss << -(y - height / 2);
+        ss << -(y - height / 2) / sizeCoeff;
         std::wstring str = ss.str();
         TextOut(hdc, width / 2 + 5, y - 10, str.c_str(), str.length());
     }
     for (int y = height / 2 - STEP; y > 0; y -= STEP) {
         std::wstringstream ss;
-        ss << -(y - height / 2);
+        ss << -(y - height / 2) / sizeCoeff;
         std::wstring str = ss.str();
         TextOut(hdc, width / 2 + 5, y - 10, str.c_str(), str.length());
     }
@@ -260,42 +257,40 @@ void DrawNumbers(HDC hdc, int width, int height, double maxY) {
     DeleteObject(hFont);
 }
 
-YSizes DrawGraph(HDC hdc, IFunc* func, int userSpaceWidth, int userSpaceHeight)
+double DrawGraph(HDC hdc, IFunc* func, int userSpaceWidth, int userSpaceHeight)
 {
     SelectPen(hdc, graphPen);
-
-    double minY, maxY;
 
     int centerX = userSpaceWidth / 2;
     int centerY = userSpaceHeight / 2;
 
     CalcedDotsAndSizes calcedDotsAndSizes = CalcDots(func, -centerX, centerX);
     
-    for (int i = 0; i < userSpaceWidth; i++) {
-        int x = i - centerX;
-        double y = centerY - func->getValue(x);
+    std::vector<Dot> dots = calcedDotsAndSizes.dots;
+    YSizes ySizes = calcedDotsAndSizes.ySizes;
+    
+    double maxAbsY = ySizes.maxY;
+
+    if (maxAbsY < ySizes.minY) maxAbsY = ySizes.minY;
+    if (maxAbsY < -ySizes.minY) maxAbsY = -ySizes.minY;
+
+    double sizeCoeff = userSpaceHeight / maxAbsY / 2;
+
+    for (int i = 0; i < dots.size(); i++) {
+        Dot dot = dots[i];
+
+        double y = (centerY - dot.y * sizeCoeff);
 
 
         if (i == 0) {
             MoveToEx(hdc, i, y, NULL);
-            
-            minY = y;
-            maxY = y;
         }
         else {
             LineTo(hdc, i, y);
-
-            if (minY > y) minY = y;
-            if (maxY < y) maxY = y;
         }
     }
 
-    YSizes ySizes;
-
-    ySizes.minY = minY;
-    ySizes.maxY = maxY;
-
-    return ySizes;
+    return sizeCoeff;
 }
 
 
