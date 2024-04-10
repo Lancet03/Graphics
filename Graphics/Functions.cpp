@@ -3,7 +3,6 @@
 #include "IFunc.h"
 #include "LinearFunc.h"
 #include "SquareFunc.h"
-
 int main()
 {
     // std::shared_ptr<IFunc> lf = std::make_shared<LinearFunc>(2.0, -5.5);

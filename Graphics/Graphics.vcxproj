@@ -127,7 +127,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Functions.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="LinearFunc.cpp" />
     <ClCompile Include="SquareFunc.cpp" />
