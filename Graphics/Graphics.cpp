@@ -6,12 +6,13 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <cmath>
 
 #include "IFunc.h"
 #include "LinearFunc.h"
 #include "SquareFunc.h"
 
-IFunc* functionToDraw = new LinearFunc(1, 1);
+IFunc* functionToDraw = new LinearFunc(2, 0);
 
 const wchar_t CLASS_NAME[] = L"Graphics";
 
@@ -25,7 +26,7 @@ struct YSizes {
 };
 
 struct Dot {
-    int x, y;
+    double x, y;
 };
 
 struct CalcedDotsAndSizes {
@@ -34,8 +35,11 @@ struct CalcedDotsAndSizes {
 };
 
 
-// Параметры сетки (шаг)
+// Шаг сетки в пикселях
 int STEP = 50;
+
+// Разброс значений по оси X
+int RANGE = 20;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 WNDCLASS InitWindow(WNDCLASS& wc, HINSTANCE& hInstance);
@@ -82,7 +86,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         HDC hdc = BeginPaint(hwnd, &ps);
 
         // All painting occurs here, between BeginPaint and EndPaint.
-
         FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
 
         Render(hdc);
@@ -120,7 +123,7 @@ HWND CreateMainWindow(HINSTANCE hInstance)
     HWND hWnd = CreateWindowEx(
         0,                              // Optional window styles.
         CLASS_NAME,                     // Window class
-        L"Graphics",    // Window text
+        L"Graphics",                    // Window text
         WS_OVERLAPPEDWINDOW,            // Window style
 
         // Size and position
@@ -148,7 +151,6 @@ WPARAM StartMessageLoop()
 
 void Render(HDC hdc) 
 {
-    // Размеры окна
     RECT rect;
     GetClientRect(WindowFromDC(hdc), &rect);
     int width = rect.right - rect.left;
@@ -156,105 +158,11 @@ void Render(HDC hdc)
 
     double sizeCoeff = DrawGraph(hdc, functionToDraw, width, height);
 
-
-    // Рисуем оси координат
     DrawXYAxis(hdc, width, height);
     
-    // Рисуем координатную сетку
     DrawGrid(hdc, width, height);
 
-    // Рисуем числа на пересечениях сетки
     DrawNumbers(hdc, width, height, sizeCoeff);
-}
-
-void DrawXYAxis(HDC hdc, int width, int height) 
-{
-    SelectPen(hdc, axisPen);
-
-    MoveToEx(hdc, 0, height / 2, NULL); // Перемещаем перо в начало координат
-    LineTo(hdc, width, height / 2); // Рисуем ось X
-
-    // Рисуем стрелку на оси X
-    MoveToEx(hdc, width, height / 2, NULL); // Перемещаем перо в конец оси X
-    LineTo(hdc, width - 10, height / 2 - 5); // Верхняя часть стрелки
-    MoveToEx(hdc, width, height / 2, NULL); // Перемещаем перо в конец оси X
-    LineTo(hdc, width - 10, height / 2 + 5); // Нижняя часть стрелки
-
-
-    MoveToEx(hdc, width / 2, 0, NULL); // Перемещаем перо в начало координат
-    LineTo(hdc, width / 2, height); // Рисуем ось Y
-
-    // Рисуем стрелку на оси Y
-    MoveToEx(hdc, width / 2, 0, NULL); // Перемещаем перо в начало оси Y
-    LineTo(hdc, width / 2 - 5, 10); // Левая часть стрелки
-    MoveToEx(hdc, width / 2, 0, NULL); // Перемещаем перо в начало оси Y
-    LineTo(hdc, width / 2 + 5, 10); // Правая часть стрелки
-}
-
-void DrawGrid(HDC hdc, int width, int height) {
-    SelectPen(hdc, gridPen);
-
-    // Рисуем вертикальные линии
-    for (int x = width / 2 + STEP; x < width; x += STEP) {
-        MoveToEx(hdc, x, 0, NULL);
-        LineTo(hdc, x, height);
-    }
-    for (int x = width / 2 - STEP; x > 0; x -= STEP) {
-        MoveToEx(hdc, x, 0, NULL);
-        LineTo(hdc, x, height);
-    }
-
-    // Рисуем горизонтальные линии
-    for (int y = height / 2 + STEP; y < height; y += STEP) {
-        MoveToEx(hdc, 0, y, NULL);
-        LineTo(hdc, width, y);
-    }
-    for (int y = height / 2 - STEP; y > 0; y -= STEP) {
-        MoveToEx(hdc, 0, y, NULL);
-        LineTo(hdc, width, y);
-    }
-}
-
-// Функция для рисования чисел на пересечениях сетки
-void DrawNumbers(HDC hdc, int width, int height, double sizeCoeff) {
-    int fontHeight = 20;
-    
-    // Шрифт для чисел
-    HFONT hFont = CreateFont(fontHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial");
-    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
-    SetBkMode(hdc, TRANSPARENT);
-
-    // Рисуем числа на оси X
-    for (int x = width / 2 + STEP; x < width; x += STEP) {
-        std::wstringstream ss;
-        ss << (x - width / 2);
-        std::wstring str = ss.str();
-        TextOut(hdc, x - 10, height / 2 - 20, str.c_str(), str.length());
-    }
-    for (int x = width / 2 - STEP; x > 0; x -= STEP) {
-        std::wstringstream ss;
-        ss << (x - width / 2);
-        std::wstring str = ss.str();
-        TextOut(hdc, x - 10, height / 2 - 20, str.c_str(), str.length());
-    }
-
-    // Рисуем числа на оси Y
-    for (int y = height / 2 + STEP; y < height; y += STEP) {
-        std::wstringstream ss;
-        ss << -(y - height / 2) / sizeCoeff;
-        std::wstring str = ss.str();
-        TextOut(hdc, width / 2 + 5, y - 10, str.c_str(), str.length());
-    }
-    for (int y = height / 2 - STEP; y > 0; y -= STEP) {
-        std::wstringstream ss;
-        ss << -(y - height / 2) / sizeCoeff;
-        std::wstring str = ss.str();
-        TextOut(hdc, width / 2 + 5, y - 10, str.c_str(), str.length());
-    }
-
-    // Восстанавливаем предыдущий шрифт
-    SelectObject(hdc, hOldFont);
-    DeleteObject(hFont);
 }
 
 double DrawGraph(HDC hdc, IFunc* func, int userSpaceWidth, int userSpaceHeight)
@@ -265,10 +173,10 @@ double DrawGraph(HDC hdc, IFunc* func, int userSpaceWidth, int userSpaceHeight)
     int centerY = userSpaceHeight / 2;
 
     CalcedDotsAndSizes calcedDotsAndSizes = CalcDots(func, -centerX, centerX);
-    
+
     std::vector<Dot> dots = calcedDotsAndSizes.dots;
     YSizes ySizes = calcedDotsAndSizes.ySizes;
-    
+
     double maxAbsY = ySizes.maxY;
 
     if (maxAbsY < ySizes.minY) maxAbsY = ySizes.minY;
@@ -293,14 +201,6 @@ double DrawGraph(HDC hdc, IFunc* func, int userSpaceWidth, int userSpaceHeight)
     return sizeCoeff;
 }
 
-
-
-void SelectPen(HDC hdc, PenParams penParams)
-{
-    HPEN coordinateAxesPen = CreatePen(penParams.style, penParams.width, penParams.color);
-    HPEN hOldPen = (HPEN)SelectObject(hdc, coordinateAxesPen); // Выбираем созданное перо
-}
-
 CalcedDotsAndSizes CalcDots(IFunc* func, int minX, int maxX) {
     std::vector<Dot> dots;
 
@@ -310,7 +210,7 @@ CalcedDotsAndSizes CalcDots(IFunc* func, int minX, int maxX) {
 
     for (int i = minX; i < maxX; i++) {
         int x = i;
-        int y = func->getValue(i);
+        double y = func->getValue((double)i * RANGE / xRange);
 
         if (i == minX) {
             minY = y;
@@ -337,6 +237,108 @@ CalcedDotsAndSizes CalcDots(IFunc* func, int minX, int maxX) {
 
     return calcedDotsAndSizes;
 }
+
+void DrawXYAxis(HDC hdc, int width, int height) 
+{
+    SelectPen(hdc, axisPen);
+    // Ось X
+    MoveToEx(hdc, 0, height / 2, NULL); 
+    LineTo(hdc, width, height / 2); 
+
+    // Стрелка на оси X
+    MoveToEx(hdc, width, height / 2, NULL); 
+    LineTo(hdc, width - 10, height / 2 - 5);
+    MoveToEx(hdc, width, height / 2, NULL); 
+    LineTo(hdc, width - 10, height / 2 + 5);
+
+    // Ось Y
+    MoveToEx(hdc, width / 2, 0, NULL);
+    LineTo(hdc, width / 2, height); 
+
+    // Стрелка на оси Y
+    MoveToEx(hdc, width / 2, 0, NULL); 
+    LineTo(hdc, width / 2 - 5, 10); 
+    MoveToEx(hdc, width / 2, 0, NULL); 
+    LineTo(hdc, width / 2 + 5, 10);
+}
+
+void DrawGrid(HDC hdc, int width, int height) {
+    SelectPen(hdc, gridPen);
+
+    // Вертикальные линии
+    for (int x = width / 2 + STEP; x < width; x += STEP) {
+        MoveToEx(hdc, x, 0, NULL);
+        LineTo(hdc, x, height);
+    }
+    for (int x = width / 2 - STEP; x > 0; x -= STEP) {
+        MoveToEx(hdc, x, 0, NULL);
+        LineTo(hdc, x, height);
+    }
+
+    // Горизонтальные линии
+    for (int y = height / 2 + STEP; y < height; y += STEP) {
+        MoveToEx(hdc, 0, y, NULL);
+        LineTo(hdc, width, y);
+    }
+    for (int y = height / 2 - STEP; y > 0; y -= STEP) {
+        MoveToEx(hdc, 0, y, NULL);
+        LineTo(hdc, width, y);
+    }
+}
+
+
+void DrawNumbers(HDC hdc, int width, int height, double sizeCoeff) {
+    int fontHeight = 20;
+    
+    HFONT hFont = CreateFont(fontHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Arial");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+    SetBkMode(hdc, TRANSPARENT);
+
+    // Числа на оси X
+    for (int x = width / 2 + STEP; x < width; x += STEP) {
+        std::wstringstream ss;
+        double number = ((double)x - width / 2) * RANGE / width;
+        double roundedNumber = std::round(number * 100) / 100;
+        ss << roundedNumber;
+        std::wstring str = ss.str();
+        TextOut(hdc, x - 10, height / 2 - 20, str.c_str(), str.length());
+    }
+    for (int x = width / 2 - STEP; x > 0; x -= STEP) {
+        std::wstringstream ss;
+        double number = ((double)x - width / 2) * RANGE / width;
+        double roundedNumber = std::round(number * 100) / 100;
+        ss << roundedNumber;
+        std::wstring str = ss.str();
+        TextOut(hdc, x - 10, height / 2 - 20, str.c_str(), str.length());
+    }
+
+    // Числа на оси Y
+    for (int y = height / 2 + STEP; y < height; y += STEP) {
+        std::wstringstream ss;
+        double number = -(y - height / 2) / sizeCoeff;
+        double roundedNumber = std::round(number * 100) / 100;
+        ss << roundedNumber;
+        std::wstring str = ss.str();
+        TextOut(hdc, width / 2 + 5, y - 10, str.c_str(), str.length());
+    }
+    for (int y = height / 2 - STEP; y > 0; y -= STEP) {
+        std::wstringstream ss;
+        double number = -(y - height / 2) / sizeCoeff;
+        double roundedNumber = std::round(number * 100) / 100;
+        ss << roundedNumber;
+        std::wstring str = ss.str();
+        TextOut(hdc, width / 2 + 5, y - 10, str.c_str(), str.length());
+    }
+
+    SelectObject(hdc, hOldFont);
+}
+
+void SelectPen(HDC hdc, PenParams penParams)
+{
+    HPEN coordinateAxesPen = CreatePen(penParams.style, penParams.width, penParams.color);
+    HPEN hOldPen = (HPEN)SelectObject(hdc, coordinateAxesPen); // Выбираем созданное перо
+}
+
 
 
 
