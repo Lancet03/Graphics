@@ -12,7 +12,7 @@
 #include "LinearFunc.h"
 #include "SquareFunc.h"
 
-IFunc* functionToDraw = new LinearFunc(2, 0);
+IFunc* functionToDraw = new SquareFunc(2, 1, 2);
 
 const wchar_t CLASS_NAME[] = L"Graphics";
 
@@ -49,7 +49,8 @@ void Render(HDC hdc);
 void DrawGrid(HDC hdc, int width, int height);
 void DrawNumbers(HDC hdc, int width, int height, double sizeCoeff);
 void DrawXYAxis(HDC hdc, int width, int height);
-double DrawGraph(HDC hdc, IFunc* func, int userSpaceWidth, int userSpaceHeight);
+void DrawGraph(HDC hdc, CalcedDotsAndSizes calcedDotsAndSizes, Dot center, double sizeCoeff);
+double CalcSizeCoeff(CalcedDotsAndSizes calcedDotsAndSizes, Dot center);
 CalcedDotsAndSizes CalcDots(IFunc* func, int minX, int maxX);
 void SelectPen(HDC hdc, PenParams penParams);
 
@@ -87,9 +88,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         // All painting occurs here, between BeginPaint and EndPaint.
         FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
-
         Render(hdc);
-
         EndPaint(hwnd, &ps);
 
         return 0;
@@ -156,39 +155,36 @@ void Render(HDC hdc)
     int width = rect.right - rect.left;
     int height = rect.bottom - rect.top;
 
-    double sizeCoeff = DrawGraph(hdc, functionToDraw, width, height);
+    Dot center = { width / 2, height / 2 };
 
-    DrawXYAxis(hdc, width, height);
+    CalcedDotsAndSizes calcedDotsAndSizes = CalcDots(functionToDraw, -center.x, center.x);
+    double sizeCoeff = CalcSizeCoeff(calcedDotsAndSizes, center);
     
+    DrawGraph(hdc, calcedDotsAndSizes, center, sizeCoeff);
+    DrawXYAxis(hdc, width, height);
     DrawGrid(hdc, width, height);
-
     DrawNumbers(hdc, width, height, sizeCoeff);
 }
 
-double DrawGraph(HDC hdc, IFunc* func, int userSpaceWidth, int userSpaceHeight)
-{
-    SelectPen(hdc, graphPen);
-
-    int centerX = userSpaceWidth / 2;
-    int centerY = userSpaceHeight / 2;
-
-    CalcedDotsAndSizes calcedDotsAndSizes = CalcDots(func, -centerX, centerX);
-
-    std::vector<Dot> dots = calcedDotsAndSizes.dots;
+double CalcSizeCoeff(CalcedDotsAndSizes calcedDotsAndSizes, Dot center) {
     YSizes ySizes = calcedDotsAndSizes.ySizes;
 
     double maxAbsY = ySizes.maxY;
 
-    if (maxAbsY < ySizes.minY) maxAbsY = ySizes.minY;
+    //if (maxAbsY < ySizes.minY) maxAbsY = ySizes.minY;
     if (maxAbsY < -ySizes.minY) maxAbsY = -ySizes.minY;
 
-    double sizeCoeff = userSpaceHeight / maxAbsY / 2;
+    return (center.y / maxAbsY);
+}
 
+void DrawGraph(HDC hdc, CalcedDotsAndSizes calcedDotsAndSizes, Dot center, double sizeCoeff)
+{
+    SelectPen(hdc, graphPen);
+
+    std::vector<Dot> dots = calcedDotsAndSizes.dots;
     for (int i = 0; i < dots.size(); i++) {
         Dot dot = dots[i];
-
-        double y = (centerY - dot.y * sizeCoeff);
-
+        double y = (center.y - dot.y * sizeCoeff);
 
         if (i == 0) {
             MoveToEx(hdc, i, y, NULL);
@@ -197,8 +193,6 @@ double DrawGraph(HDC hdc, IFunc* func, int userSpaceWidth, int userSpaceHeight)
             LineTo(hdc, i, y);
         }
     }
-
-    return sizeCoeff;
 }
 
 CalcedDotsAndSizes CalcDots(IFunc* func, int minX, int maxX) {
@@ -229,7 +223,6 @@ CalcedDotsAndSizes CalcDots(IFunc* func, int minX, int maxX) {
     YSizes ySizes;
     ySizes.minY = minY;
     ySizes.maxY = maxY;
-
 
     CalcedDotsAndSizes calcedDotsAndSizes;
     calcedDotsAndSizes.dots = dots;
