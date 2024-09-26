@@ -8,11 +8,17 @@
 #include <vector>
 #include <cmath>
 
+#include "Dot.h"
+#include "CalcedDotsAndSizes.h"
 #include "IFunc.h"
 #include "LinearFunc.h"
 #include "SquareFunc.h"
+#include "Derivative.h"
+#include "Integral.h"
 
-IFunc* functionToDraw = new SquareFunc(2, 1, 2);
+IFunc* functionToDraw = new LinearFunc(2, 1);
+IFunc* derivative = new Derivative(functionToDraw, 1);
+IFunc* integral = new Integral(functionToDraw, 2);
 
 const wchar_t CLASS_NAME[] = L"Graphics";
 
@@ -20,19 +26,6 @@ struct PenParams {
     int style, width;
     COLORREF color;
 } axisPen{ PS_SOLID, 3, RGB(0, 0, 0) }, gridPen{ PS_SOLID, 1, RGB(0, 0, 0) }, graphPen{ PS_SOLID, 2, RGB(255, 0, 0) };
-
-struct YSizes {
-    double minY, maxY;
-};
-
-struct Dot {
-    double x, y;
-};
-
-struct CalcedDotsAndSizes {
-    YSizes ySizes;
-    std::vector<Dot> dots;
-};
 
 
 // Шаг сетки в пикселях
@@ -159,8 +152,14 @@ void Render(HDC hdc)
 
     CalcedDotsAndSizes calcedDotsAndSizes = CalcDots(functionToDraw, -center.x, center.x);
     double sizeCoeff = CalcSizeCoeff(calcedDotsAndSizes, center);
+
+    CalcedDotsAndSizes derivativeDotsAndSizes = CalcDots(derivative, -center.x, center.x);
+    CalcedDotsAndSizes integralDotsAndSizes = CalcDots(integral, -center.x, center.x);
     
     DrawGraph(hdc, calcedDotsAndSizes, center, sizeCoeff);
+    DrawGraph(hdc, derivativeDotsAndSizes, center, sizeCoeff);
+    DrawGraph(hdc, integralDotsAndSizes, center, sizeCoeff);
+
     DrawXYAxis(hdc, width, height);
     DrawGrid(hdc, width, height);
     DrawNumbers(hdc, width, height, sizeCoeff);
@@ -170,8 +169,6 @@ double CalcSizeCoeff(CalcedDotsAndSizes calcedDotsAndSizes, Dot center) {
     YSizes ySizes = calcedDotsAndSizes.ySizes;
 
     double maxAbsY = ySizes.maxY;
-
-    //if (maxAbsY < ySizes.minY) maxAbsY = ySizes.minY;
     if (maxAbsY < -ySizes.minY) maxAbsY = -ySizes.minY;
 
     return (center.y / maxAbsY);
@@ -205,6 +202,7 @@ CalcedDotsAndSizes CalcDots(IFunc* func, int minX, int maxX) {
     for (int i = minX; i < maxX; i++) {
         int x = i;
         double y = func->getValue((double)i * RANGE / xRange);
+        //double y = (*func)((double)i * RANGE / xRange);
 
         if (i == minX) {
             minY = y;
