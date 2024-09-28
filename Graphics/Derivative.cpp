@@ -8,11 +8,11 @@ Derivative::Derivative(IFunc* originalFunc, double delta) {
 double Derivative::getValue(double x) {
 	IFunc* y = this->originalFunc;
 
-	return ((*y)(x + this->delta) - (*y)(x)) / this->delta;
+	return ((*y)(x) - (*y)(x - this->delta)) / this->delta;
 }
 
 double Derivative::operator()(double x) {
 	IFunc* y = this->originalFunc;
 
-	return ((*y)(x + this->delta) - (*y)(x)) / this->delta;
+	return ((*y)(x) - (*y)(x - this->delta)) / this->delta;
 }

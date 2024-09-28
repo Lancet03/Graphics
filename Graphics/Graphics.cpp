@@ -16,9 +16,10 @@
 #include "Derivative.h"
 #include "Integral.h"
 
-IFunc* functionToDraw = new LinearFunc(2, 1);
-IFunc* derivative = new Derivative(functionToDraw, 1);
-IFunc* integral = new Integral(functionToDraw, 2);
+IFunc* functionToDraw = new SquareFunc(1, 1, 1);
+IFunc* derivative = new Derivative(functionToDraw, 2);
+//IFunc* integral = new Integral(functionToDraw, 2);
+Integral* integral = new Integral(functionToDraw, 2);
 
 const wchar_t CLASS_NAME[] = L"Graphics";
 
@@ -32,7 +33,7 @@ struct PenParams {
 int STEP = 50;
 
 // Разброс значений по оси X
-int RANGE = 20;
+int RANGE = 4;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 WNDCLASS InitWindow(WNDCLASS& wc, HINSTANCE& hInstance);
@@ -42,9 +43,9 @@ void Render(HDC hdc);
 void DrawGrid(HDC hdc, int width, int height);
 void DrawNumbers(HDC hdc, int width, int height, double sizeCoeff);
 void DrawXYAxis(HDC hdc, int width, int height);
-void DrawGraph(HDC hdc, CalcedDotsAndSizes calcedDotsAndSizes, Dot center, double sizeCoeff);
+void DrawGraph(HDC hdc, CalcedDotsAndSizes calcedDotsAndSizes, Dot center, double ySizeCoeff, double xSizeCoeff);
 double CalcSizeCoeff(CalcedDotsAndSizes calcedDotsAndSizes, Dot center);
-CalcedDotsAndSizes CalcDots(IFunc* func, int minX, int maxX);
+CalcedDotsAndSizes CalcDots(IFunc* func, double minX, double maxX, int width);
 void SelectPen(HDC hdc, PenParams penParams);
 
 
@@ -148,17 +149,31 @@ void Render(HDC hdc)
     int width = rect.right - rect.left;
     int height = rect.bottom - rect.top;
 
+    double xSizeCoeff = (double)width / 2 / (double)RANGE;
+
     Dot center = { width / 2, height / 2 };
 
-    CalcedDotsAndSizes calcedDotsAndSizes = CalcDots(functionToDraw, -center.x, center.x);
-    double sizeCoeff = CalcSizeCoeff(calcedDotsAndSizes, center);
+    std::vector<double> sizeCoeffs;
 
-    CalcedDotsAndSizes derivativeDotsAndSizes = CalcDots(derivative, -center.x, center.x);
-    CalcedDotsAndSizes integralDotsAndSizes = CalcDots(integral, -center.x, center.x);
+    CalcedDotsAndSizes calcedDotsAndSizes = CalcDots(functionToDraw, -RANGE, RANGE, width);
+    sizeCoeffs.push_back(CalcSizeCoeff(calcedDotsAndSizes, center));
+
+    CalcedDotsAndSizes derivativeDotsAndSizes = CalcDots(derivative, -RANGE, RANGE, width);
+    sizeCoeffs.push_back(CalcSizeCoeff(derivativeDotsAndSizes, center));
+
+    CalcedDotsAndSizes integralDotsAndSizes = integral->CalcDots(-RANGE, RANGE, 1000, xSizeCoeff);
+    sizeCoeffs.push_back(CalcSizeCoeff(integralDotsAndSizes, center));
     
-    DrawGraph(hdc, calcedDotsAndSizes, center, sizeCoeff);
-    DrawGraph(hdc, derivativeDotsAndSizes, center, sizeCoeff);
-    DrawGraph(hdc, integralDotsAndSizes, center, sizeCoeff);
+    double sizeCoeff = sizeCoeffs[0];
+    for (int i = 0; i < sizeCoeffs.size(); i++) {
+        if (sizeCoeff > sizeCoeffs[i]) {
+            sizeCoeff = sizeCoeffs[i];
+        }
+    }
+
+    DrawGraph(hdc, calcedDotsAndSizes, center, sizeCoeff, xSizeCoeff);
+    DrawGraph(hdc, derivativeDotsAndSizes, center, sizeCoeff, xSizeCoeff);
+    DrawGraph(hdc, integralDotsAndSizes, center, sizeCoeff, xSizeCoeff);
 
     DrawXYAxis(hdc, width, height);
     DrawGrid(hdc, width, height);
@@ -169,39 +184,43 @@ double CalcSizeCoeff(CalcedDotsAndSizes calcedDotsAndSizes, Dot center) {
     YSizes ySizes = calcedDotsAndSizes.ySizes;
 
     double maxAbsY = ySizes.maxY;
+    if (maxAbsY < ySizes.minY) maxAbsY = ySizes.minY;
     if (maxAbsY < -ySizes.minY) maxAbsY = -ySizes.minY;
 
-    return (center.y / maxAbsY);
+    double sizeCoeff = (center.y / maxAbsY);
+    return sizeCoeff;
 }
 
-void DrawGraph(HDC hdc, CalcedDotsAndSizes calcedDotsAndSizes, Dot center, double sizeCoeff)
+void DrawGraph(HDC hdc, CalcedDotsAndSizes calcedDotsAndSizes, Dot center, double ySizeCoeff, double xSizeCoeff)
 {
     SelectPen(hdc, graphPen);
 
     std::vector<Dot> dots = calcedDotsAndSizes.dots;
     for (int i = 0; i < dots.size(); i++) {
         Dot dot = dots[i];
-        double y = (center.y - dot.y * sizeCoeff);
-
+        double y = (center.y - dot.y * ySizeCoeff);
+        double x = (center.x + dot.x * xSizeCoeff);
         if (i == 0) {
-            MoveToEx(hdc, i, y, NULL);
+            MoveToEx(hdc, x, y, NULL);
         }
         else {
-            LineTo(hdc, i, y);
+            LineTo(hdc, x, y);
+            //LineTo(hdc, x, y);
         }
     }
 }
 
-CalcedDotsAndSizes CalcDots(IFunc* func, int minX, int maxX) {
+CalcedDotsAndSizes CalcDots(IFunc* func, double minX, double maxX, int width) {
     std::vector<Dot> dots;
 
-    int xRange = maxX - minX;
+    double xRange = maxX - minX;
+    double step = xRange / width;
 
     double minY, maxY;
 
-    for (int i = minX; i < maxX; i++) {
-        int x = i;
-        double y = func->getValue((double)i * RANGE / xRange);
+    for (double i = minX; i < maxX; i += step) {
+        double x = i;
+        double y = func->getValue(x);
         //double y = (*func)((double)i * RANGE / xRange);
 
         if (i == minX) {
@@ -288,7 +307,7 @@ void DrawNumbers(HDC hdc, int width, int height, double sizeCoeff) {
     // Числа на оси X
     for (int x = width / 2 + STEP; x < width; x += STEP) {
         std::wstringstream ss;
-        double number = ((double)x - width / 2) * RANGE / width;
+        double number = ((double)x - width / 2) * RANGE * 2 / width;
         double roundedNumber = std::round(number * 100) / 100;
         ss << roundedNumber;
         std::wstring str = ss.str();
@@ -296,7 +315,7 @@ void DrawNumbers(HDC hdc, int width, int height, double sizeCoeff) {
     }
     for (int x = width / 2 - STEP; x > 0; x -= STEP) {
         std::wstringstream ss;
-        double number = ((double)x - width / 2) * RANGE / width;
+        double number = ((double)x - width / 2) * RANGE * 2 / width;
         double roundedNumber = std::round(number * 100) / 100;
         ss << roundedNumber;
         std::wstring str = ss.str();
