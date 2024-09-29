@@ -7,8 +7,5 @@ class Derivative {
 	IFunc* originalFunc;
 public:
 	Derivative(IFunc* originalFunc);
-	CalcedDotsAndSizes CalcDots(double a, double b, double delta, double xSizeCoeff);
-	
-	/*double getValue(double x);
-	double operator()(double x);*/
+	CalcedDotsAndSizes CalcDots(double a, double b, double n, double xSizeCoeff);
 };

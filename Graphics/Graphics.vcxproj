@@ -129,6 +129,7 @@
   <ItemGroup>
     <ClCompile Include="Derivative.cpp" />
     <ClCompile Include="Graphics.cpp" />
+    <ClCompile Include="GraphRenderer.cpp" />
     <ClCompile Include="Integral.cpp" />
     <ClCompile Include="LinearFunc.cpp" />
     <ClCompile Include="SquareFunc.cpp" />
@@ -137,9 +138,11 @@
     <ClInclude Include="CalcedDotsAndSizes.h" />
     <ClInclude Include="Derivative.h" />
     <ClInclude Include="Dot.h" />
+    <ClInclude Include="GraphRenderer.h" />
     <ClInclude Include="IFunc.h" />
     <ClInclude Include="Integral.h" />
     <ClInclude Include="LinearFunc.h" />
+    <ClInclude Include="PenParams.h" />
     <ClInclude Include="SquareFunc.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
