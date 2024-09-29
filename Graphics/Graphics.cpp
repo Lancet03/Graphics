@@ -17,8 +17,7 @@
 #include "Integral.h"
 
 IFunc* functionToDraw = new SquareFunc(1, 1, 1);
-IFunc* derivative = new Derivative(functionToDraw, 2);
-//IFunc* integral = new Integral(functionToDraw, 2);
+Derivative* derivative = new Derivative(functionToDraw);
 Integral* integral = new Integral(functionToDraw, 2);
 
 const wchar_t CLASS_NAME[] = L"Graphics";
@@ -158,7 +157,8 @@ void Render(HDC hdc)
     CalcedDotsAndSizes calcedDotsAndSizes = CalcDots(functionToDraw, -RANGE, RANGE, width);
     sizeCoeffs.push_back(CalcSizeCoeff(calcedDotsAndSizes, center));
 
-    CalcedDotsAndSizes derivativeDotsAndSizes = CalcDots(derivative, -RANGE, RANGE, width);
+    //CalcedDotsAndSizes derivativeDotsAndSizes = CalcDots(derivative, -RANGE, RANGE, width);
+    CalcedDotsAndSizes derivativeDotsAndSizes = derivative->CalcDots(-RANGE, RANGE, 1000, xSizeCoeff);
     sizeCoeffs.push_back(CalcSizeCoeff(derivativeDotsAndSizes, center));
 
     CalcedDotsAndSizes integralDotsAndSizes = integral->CalcDots(-RANGE, RANGE, 1000, xSizeCoeff);

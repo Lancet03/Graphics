@@ -1,18 +1,36 @@
 #include "Derivative.h"
 
-Derivative::Derivative(IFunc* originalFunc, double delta) {
+Derivative::Derivative(IFunc* originalFunc) {
 	this->originalFunc = originalFunc;
-	this->delta = delta;
 }
 
-double Derivative::getValue(double x) {
-	IFunc* y = this->originalFunc;
+CalcedDotsAndSizes Derivative::CalcDots(double minX, double maxX, double n, double xSizeCoeff) {
+	IFunc* f = this->originalFunc;
 
-	return ((*y)(x) - (*y)(x - this->delta)) / this->delta;
-}
+	CalcedDotsAndSizes calcedDots;
 
-double Derivative::operator()(double x) {
-	IFunc* y = this->originalFunc;
+	double range = maxX - minX;
+	double delta = range / n;
+	double x = minX;
+	for (double i = 0; i < n; i++) {
+		double y = ((*f)(x) - (*f)(x - delta)) / delta;
+		calcedDots.dots.push_back({ x, y });
 
-	return ((*y)(x) - (*y)(x - this->delta)) / this->delta;
+		if (x == minX) {
+			calcedDots.ySizes.maxY = y;
+			calcedDots.ySizes.minY = y;
+		}
+		else {
+			if (calcedDots.ySizes.minY > y) {
+				calcedDots.ySizes.minY = y;
+			}
+			if (calcedDots.ySizes.maxY < y) {
+				calcedDots.ySizes.maxY = y;
+			}
+		}
+
+		x += delta;
+	}
+
+	return calcedDots;
 }

@@ -3,11 +3,12 @@
 #include "Dot.h"
 #include "CalcedDotsAndSizes.h"
 
-class Derivative : public IFunc {
+class Derivative {
 	IFunc* originalFunc;
-	double delta;
 public:
-	Derivative(IFunc* originalFunc, double delta);
-	double getValue(double x) override;
-	double operator()(double x) override;
+	Derivative(IFunc* originalFunc);
+	CalcedDotsAndSizes CalcDots(double a, double b, double delta, double xSizeCoeff);
+	
+	/*double getValue(double x);
+	double operator()(double x);*/
 };
