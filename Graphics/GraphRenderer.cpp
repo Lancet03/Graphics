@@ -11,11 +11,38 @@ GraphRenderer::GraphRenderer(HDC hdc, int width, int height, int range, int step
     this->STEP = step;
 }
 
-void GraphRenderer::DrawGraph(CalcedDotsAndSizes calcedDotsAndSizes, Dot center, double ySizeCoeff, double xSizeCoeff, PenParams graphPen)
+void GraphRenderer::DrawGraph(CalcedDotsAndSizes calcedDotsAndSizes, Dot center, double ySizeCoeff, double xSizeCoeff, PenParams graphPen, PenParams outlinePen)
 {
-    SelectPen(graphPen);
-
     std::vector<Dot> dots = calcedDotsAndSizes.dots;
+
+    SelectPen(outlinePen);
+    for (int i = 0; i < dots.size(); i++) {
+        Dot dot = dots[i];
+        double y = (center.y - dot.y * ySizeCoeff);
+        double x = (center.x + dot.x * xSizeCoeff);
+        if (i == 0) {
+            MoveToEx(hdc, x, y - 1, NULL);
+        }
+        else {
+            LineTo(hdc, x, y - 1);
+        }
+    }
+    for (int i = 0; i < dots.size(); i++) {
+        Dot dot = dots[i];
+        double y = (center.y - dot.y * ySizeCoeff);
+        double x = (center.x + dot.x * xSizeCoeff);
+        if (i == 0) {
+            MoveToEx(hdc, x, y + 1, NULL);
+        }
+        else {
+            LineTo(hdc, x, y + 1);
+        }
+    }
+
+
+   
+
+    SelectPen(graphPen);
     for (int i = 0; i < dots.size(); i++) {
         Dot dot = dots[i];
         double y = (center.y - dot.y * ySizeCoeff);

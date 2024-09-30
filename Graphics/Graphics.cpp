@@ -164,9 +164,9 @@ void Render(HDC hdc)
 
     GraphRenderer graphRenderer(hdc, width, height, RANGE, STEP);
 
-    graphRenderer.DrawGraph(calcedDotsAndSizes, center, sizeCoeff, xSizeCoeff, originalFuncPen);
-    graphRenderer.DrawGraph(derivativeDotsAndSizes, center, sizeCoeff, xSizeCoeff, derivativePen);
-    graphRenderer.DrawGraph(integralDotsAndSizes, center, sizeCoeff, xSizeCoeff, integralPen);
+    graphRenderer.DrawGraph(calcedDotsAndSizes, center, sizeCoeff, xSizeCoeff, originalFuncPen, { PS_SOLID, 2, RGB(228, 164, 162) });
+    graphRenderer.DrawGraph(derivativeDotsAndSizes, center, sizeCoeff, xSizeCoeff, derivativePen, { PS_SOLID, 2, RGB(224, 237, 226) });
+    graphRenderer.DrawGraph(integralDotsAndSizes, center, sizeCoeff, xSizeCoeff, integralPen, { PS_SOLID, 2, RGB(78, 134, 191) });
 
     graphRenderer.DrawGraphPlane(sizeCoeff);
 
