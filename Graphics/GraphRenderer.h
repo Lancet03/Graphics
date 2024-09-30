@@ -1,9 +1,15 @@
 #pragma once
 #include <Windows.h>
+#include <sstream>
 
 #include "Dot.h"
 #include "CalcedDotsAndSizes.h"
 #include "PenParams.h"
+
+struct GraphInfoParam {
+	PenParams penParams;
+	std::wstring graphName;
+};
 
 class GraphRenderer {
 	
@@ -14,8 +20,6 @@ private:
 
 	int RANGE;
 	int STEP;
-
-	//PenParams axisPen{ PS_SOLID, 3, RGB(0, 0, 0) }, gridPen{ PS_SOLID, 1, RGB(0, 0, 0) }, graphPen{ PS_SOLID, 2, RGB(255, 0, 0) };
 
 	void SelectPen(PenParams penParams);
 public:
@@ -28,6 +32,6 @@ public:
 	void DrawXYAxis(PenParams axisPen = { PS_SOLID, 3, RGB(0, 0, 0) });
 
 	void DrawGraph(CalcedDotsAndSizes calcedDotsAndSizes, Dot center, double ySizeCoeff, double xSizeCoeff, PenParams graphPen = { PS_SOLID, 2, RGB(255, 0, 0) });
-	
+	void DrawGraphInfo(HDC hdc, std::vector<GraphInfoParam> graphInfoParams);
 };
 

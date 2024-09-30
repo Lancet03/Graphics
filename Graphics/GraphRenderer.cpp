@@ -129,6 +129,30 @@ void GraphRenderer::DrawGrid(PenParams gridPen) {
     }
 }
 
+void GraphRenderer::DrawGraphInfo(HDC hdc, std::vector<GraphInfoParam> graphInfoParams) {
+    const int OFFSET_X = 20;
+    const int OFFSET_Y = 10;
+
+    int infoBoxLeft = OFFSET_X;
+    int infoBoxTop = OFFSET_Y;
+    int infoBoxRight = OFFSET_X + 250;
+    int infoBoxBottom = OFFSET_Y + 30 * graphInfoParams.size() + 10;
+
+    // Обводка области
+    HPEN hPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0)); // Чёрная обводка
+    SelectObject(hdc, hPen);
+    Rectangle(hdc, infoBoxLeft, infoBoxTop, infoBoxRight, infoBoxBottom);
+
+    for (int i = 0; i < graphInfoParams.size(); i++) {
+        GraphInfoParam param = graphInfoParams[i];
+        this->SelectPen(param.penParams);
+        //SelectObject(hdc, );
+        int yPos = OFFSET_Y + 20 + 30 * i;
+        MoveToEx(hdc, OFFSET_X + 10, yPos, NULL);
+        LineTo(hdc, OFFSET_X + 110, yPos);
+        TextOut(hdc, OFFSET_X + 120, yPos - 10, param.graphName.c_str(), param.graphName.size());
+    }
+}
 
 void GraphRenderer::SelectPen(PenParams penParams)
 {

@@ -145,6 +145,7 @@ void Render(HDC hdc)
 
     CalcedDotsAndSizes calcedDotsAndSizes = CalcDots(functionToDraw, -RANGE, RANGE, width);
     sizeCoeffs.push_back(CalcSizeCoeff(calcedDotsAndSizes, center));
+    PenParams originalFuncPen = { PS_SOLID, 2, RGB(255, 0, 0) };
 
     CalcedDotsAndSizes derivativeDotsAndSizes = derivative->CalcDots(-RANGE, RANGE, 1000, xSizeCoeff);
     sizeCoeffs.push_back(CalcSizeCoeff(derivativeDotsAndSizes, center));
@@ -163,11 +164,19 @@ void Render(HDC hdc)
 
     GraphRenderer graphRenderer(hdc, width, height, RANGE, STEP);
 
-    graphRenderer.DrawGraph(calcedDotsAndSizes, center, sizeCoeff, xSizeCoeff);
+    graphRenderer.DrawGraph(calcedDotsAndSizes, center, sizeCoeff, xSizeCoeff, originalFuncPen);
     graphRenderer.DrawGraph(derivativeDotsAndSizes, center, sizeCoeff, xSizeCoeff, derivativePen);
     graphRenderer.DrawGraph(integralDotsAndSizes, center, sizeCoeff, xSizeCoeff, integralPen);
 
     graphRenderer.DrawGraphPlane(sizeCoeff);
+
+    std::vector<GraphInfoParam> graphInfoParams = { 
+        { originalFuncPen, L"Функция" }, 
+        { derivativePen, L"Производная"}, 
+        { integralPen, L"Интеграл"} 
+    };
+
+    graphRenderer.DrawGraphInfo(hdc, graphInfoParams);
 }
 
 double CalcSizeCoeff(CalcedDotsAndSizes calcedDotsAndSizes, Dot center) {
@@ -180,8 +189,6 @@ double CalcSizeCoeff(CalcedDotsAndSizes calcedDotsAndSizes, Dot center) {
     double sizeCoeff = (center.y / maxAbsY);
     return sizeCoeff;
 }
-
-
 
 CalcedDotsAndSizes CalcDots(IFunc* func, double minX, double maxX, int width) {
     std::vector<Dot> dots;
@@ -220,7 +227,3 @@ CalcedDotsAndSizes CalcDots(IFunc* func, double minX, double maxX, int width) {
 
     return calcedDotsAndSizes;
 }
-
-
-
-
