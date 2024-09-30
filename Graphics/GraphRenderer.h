@@ -7,7 +7,7 @@
 #include "PenParams.h"
 
 struct GraphInfoParam {
-	PenParams penParams;
+	GdiplusPenParams penParams;
 	std::wstring graphName;
 };
 

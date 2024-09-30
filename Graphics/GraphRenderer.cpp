@@ -17,7 +17,7 @@ void GraphRenderer::DrawGraph(CalcedDotsAndSizes calcedDotsAndSizes, Dot center,
 {
     Gdiplus::Graphics graphics(hdc);
     Gdiplus::Pen      pen(graphPen.color, graphPen.width);
-    //Gdiplus::Pen pen(Gdiplus::Color(255, 0, 0), 2);
+
     graphics.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
 
     //SelectPen(graphPen);
@@ -31,13 +31,7 @@ void GraphRenderer::DrawGraph(CalcedDotsAndSizes calcedDotsAndSizes, Dot center,
         Dot dot1 = dots[i + 1];
         int y1 = (center.y - dot1.y * ySizeCoeff);
         int x1 = (center.x + dot1.x * xSizeCoeff);
-        //if (i == 0) {
-        //    MoveToEx(hdc, x, y, NULL);
-        //}
-        //else {
-        //    //LineTo(hdc, x, y);
-        //    graphics.DrawLine(&pen, x, y, 200, 100);
-        //}
+
         graphics.DrawLine(&pen, x, y, x1, y1);
     }
 }
@@ -143,6 +137,9 @@ void GraphRenderer::DrawGrid(PenParams gridPen) {
 }
 
 void GraphRenderer::DrawGraphInfo(HDC hdc, std::vector<GraphInfoParam> graphInfoParams) {
+    Gdiplus::Graphics graphics(hdc);
+    graphics.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
+
     const int OFFSET_X = 20;
     const int OFFSET_Y = 10;
 
@@ -158,11 +155,10 @@ void GraphRenderer::DrawGraphInfo(HDC hdc, std::vector<GraphInfoParam> graphInfo
 
     for (int i = 0; i < graphInfoParams.size(); i++) {
         GraphInfoParam param = graphInfoParams[i];
-        this->SelectPen(param.penParams);
-        //SelectObject(hdc, );
+        Gdiplus::Pen      pen(param.penParams.color, param.penParams.width);
+
         int yPos = OFFSET_Y + 20 + 30 * i;
-        MoveToEx(hdc, OFFSET_X + 10, yPos, NULL);
-        LineTo(hdc, OFFSET_X + 110, yPos);
+        graphics.DrawLine(&pen, OFFSET_X + 10, yPos, OFFSET_X + 110, yPos);
         TextOut(hdc, OFFSET_X + 120, yPos - 10, param.graphName.c_str(), param.graphName.size());
     }
 }

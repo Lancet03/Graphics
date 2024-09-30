@@ -173,6 +173,7 @@ void Render(HDC hdc)
     sizeCoeffs.push_back(CalcSizeCoeff(integralDotsAndSizes, center));
     GdiplusPenParams  integralPen = { 2, Gdiplus::Color(0, 0, 255) };
     
+    // Выбор наибольшего размерного коэффициента для отображения всех графиков
     double sizeCoeff = sizeCoeffs[0];
     for (int i = 0; i < sizeCoeffs.size(); i++) {
         if (sizeCoeff > sizeCoeffs[i]) {
@@ -188,13 +189,13 @@ void Render(HDC hdc)
 
     graphRenderer.DrawGraphPlane(sizeCoeff);
 
-    //std::vector<GraphInfoParam> graphInfoParams = { 
-    //    { originalFuncPen, L"Функция" }, 
-    //    { derivativePen, L"Производная"}, 
-    //    { integralPen, L"Интеграл"} 
-    //};
+    std::vector<GraphInfoParam> graphInfoParams = { 
+        { originalFuncPen, L"Функция" }, 
+        { derivativePen, L"Производная"}, 
+        { integralPen, L"Интеграл"} 
+    };
 
-    //graphRenderer.DrawGraphInfo(hdc, graphInfoParams);
+    graphRenderer.DrawGraphInfo(hdc, graphInfoParams);
 }
 
 double CalcSizeCoeff(CalcedDotsAndSizes calcedDotsAndSizes, Dot center) {
