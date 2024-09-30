@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <sstream>
+#include <gdiplus.h>
+#pragma comment (lib,"Gdiplus.lib")
 
 GraphRenderer::GraphRenderer(HDC hdc, int width, int height, int range, int step) {
     this->hdc = hdc;
@@ -11,21 +13,32 @@ GraphRenderer::GraphRenderer(HDC hdc, int width, int height, int range, int step
     this->STEP = step;
 }
 
-void GraphRenderer::DrawGraph(CalcedDotsAndSizes calcedDotsAndSizes, Dot center, double ySizeCoeff, double xSizeCoeff, PenParams graphPen)
+void GraphRenderer::DrawGraph(CalcedDotsAndSizes calcedDotsAndSizes, Dot center, double ySizeCoeff, double xSizeCoeff, GdiplusPenParams graphPen)
 {
-    SelectPen(graphPen);
+    Gdiplus::Graphics graphics(hdc);
+    Gdiplus::Pen      pen(graphPen.color, graphPen.width);
+    //Gdiplus::Pen pen(Gdiplus::Color(255, 0, 0), 2);
+    graphics.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
+
+    //SelectPen(graphPen);
 
     std::vector<Dot> dots = calcedDotsAndSizes.dots;
-    for (int i = 0; i < dots.size(); i++) {
+    for (int i = 0; i < dots.size() - 1; i++) {
         Dot dot = dots[i];
-        double y = (center.y - dot.y * ySizeCoeff);
-        double x = (center.x + dot.x * xSizeCoeff);
-        if (i == 0) {
-            MoveToEx(hdc, x, y, NULL);
-        }
-        else {
-            LineTo(hdc, x, y);
-        }
+        int y = (center.y - dot.y * ySizeCoeff);
+        int x = (center.x + dot.x * xSizeCoeff);
+
+        Dot dot1 = dots[i + 1];
+        int y1 = (center.y - dot1.y * ySizeCoeff);
+        int x1 = (center.x + dot1.x * xSizeCoeff);
+        //if (i == 0) {
+        //    MoveToEx(hdc, x, y, NULL);
+        //}
+        //else {
+        //    //LineTo(hdc, x, y);
+        //    graphics.DrawLine(&pen, x, y, 200, 100);
+        //}
+        graphics.DrawLine(&pen, x, y, x1, y1);
     }
 }
 

@@ -7,6 +7,9 @@
 #include <sstream>
 #include <vector>
 #include <cmath>
+#include <gdiplus.h>
+#include <objidl.h>
+#pragma comment (lib,"Gdiplus.lib")
 
 #include "Dot.h"
 #include "CalcedDotsAndSizes.h"
@@ -40,6 +43,12 @@ CalcedDotsAndSizes CalcDots(IFunc* func, double minX, double maxX, int width);
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
     WNDCLASS wc = { };
+    MSG                 msg;
+    Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+    ULONG_PTR           gdiplusToken;
+
+    // Initialize GDI+.
+    Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
     InitWindow(wc, hInstance);
 
@@ -52,7 +61,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
     ShowWindow(hwnd, nCmdShow);
 
-    return StartMessageLoop();
+    UpdateWindow(hwnd);
+
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    Gdiplus::GdiplusShutdown(gdiplusToken);
+    return msg.wParam;
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -145,15 +163,15 @@ void Render(HDC hdc)
 
     CalcedDotsAndSizes calcedDotsAndSizes = CalcDots(functionToDraw, -RANGE, RANGE, width);
     sizeCoeffs.push_back(CalcSizeCoeff(calcedDotsAndSizes, center));
-    PenParams originalFuncPen = { PS_SOLID, 2, RGB(255, 0, 0) };
+    GdiplusPenParams originalFuncPen = { 2, Gdiplus::Color(255, 0, 0) };
 
     CalcedDotsAndSizes derivativeDotsAndSizes = derivative->CalcDots(-RANGE, RANGE, 1000, xSizeCoeff);
     sizeCoeffs.push_back(CalcSizeCoeff(derivativeDotsAndSizes, center));
-    PenParams derivativePen = { PS_SOLID, 2, RGB(0, 255, 0) };
+    GdiplusPenParams  derivativePen = { 2, Gdiplus::Color(0, 255, 0) };
 
     CalcedDotsAndSizes integralDotsAndSizes = integral->CalcDots(-RANGE, RANGE, 1000, xSizeCoeff);
     sizeCoeffs.push_back(CalcSizeCoeff(integralDotsAndSizes, center));
-    PenParams integralPen = { PS_SOLID, 2, RGB(0, 0, 255) };
+    GdiplusPenParams  integralPen = { 2, Gdiplus::Color(0, 0, 255) };
     
     double sizeCoeff = sizeCoeffs[0];
     for (int i = 0; i < sizeCoeffs.size(); i++) {
@@ -170,13 +188,13 @@ void Render(HDC hdc)
 
     graphRenderer.DrawGraphPlane(sizeCoeff);
 
-    std::vector<GraphInfoParam> graphInfoParams = { 
-        { originalFuncPen, L"Функция" }, 
-        { derivativePen, L"Производная"}, 
-        { integralPen, L"Интеграл"} 
-    };
+    //std::vector<GraphInfoParam> graphInfoParams = { 
+    //    { originalFuncPen, L"Функция" }, 
+    //    { derivativePen, L"Производная"}, 
+    //    { integralPen, L"Интеграл"} 
+    //};
 
-    graphRenderer.DrawGraphInfo(hdc, graphInfoParams);
+    //graphRenderer.DrawGraphInfo(hdc, graphInfoParams);
 }
 
 double CalcSizeCoeff(CalcedDotsAndSizes calcedDotsAndSizes, Dot center) {

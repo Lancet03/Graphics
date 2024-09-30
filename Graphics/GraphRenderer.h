@@ -31,7 +31,7 @@ public:
 	void DrawNumbers(double sizeCoeff);
 	void DrawXYAxis(PenParams axisPen = { PS_SOLID, 3, RGB(0, 0, 0) });
 
-	void DrawGraph(CalcedDotsAndSizes calcedDotsAndSizes, Dot center, double ySizeCoeff, double xSizeCoeff, PenParams graphPen = { PS_SOLID, 2, RGB(255, 0, 0) });
+	void DrawGraph(CalcedDotsAndSizes calcedDotsAndSizes, Dot center, double ySizeCoeff, double xSizeCoeff, GdiplusPenParams graphPen = { 2, Gdiplus::Color(255, 0, 0, 255) });
 	void DrawGraphInfo(HDC hdc, std::vector<GraphInfoParam> graphInfoParams);
 };
 
